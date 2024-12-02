@@ -13,14 +13,14 @@ namespace Example
         private static void Main(string[] args)
         {
             //ThreadExample();
-            IntegerPromotionExample();
-            FunctionExample1();
-            ParameterExample1();
-            ReturnValueExample();
-            FuncionExample2();
-            OutExample();
-            RefExample();
-            ParameterExample2();
+            //IntegerPromotionExample();
+            //FunctionExample1();
+            //ParameterExample1();
+            //ReturnValueExample();
+            //FuncionExample2();
+            //OutExample();
+            //RefExample();
+            //ParameterExample2();
         }
 
         // 쓰레드 예제
