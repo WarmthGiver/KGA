@@ -1,4 +1,9 @@
-﻿namespace Example1
+﻿/*
+날짜: 24.12.09
+이름: 이시온
+*/
+
+namespace Example1
 {
     internal class Program
     {
@@ -10,11 +15,19 @@
 
             //GCExample1();
 
-            //UpCastingExample1();
-
             Example2();
         }
 
+        #region 클래스(Class)
+
+        // 클래스(Class)
+        // 구조체(Struct)와 비슷하지만 클래스는 참조타입, 구조체는 값타입.
+
+        // 스택(Stack) 영역
+        // 매개변수, 지역변수
+
+        // 힙(Heap) 영역
+        // 
         private class Car
         {
             // 멤버 변수
@@ -63,19 +76,12 @@
             }
         }
 
+        #endregion
+
         #region 클래스 예제 1
 
         private static void ClassExample1()
         {
-            // 클래스(Class)
-            // 구조체(Struct)와 비슷하지만 클래스는 참조타입, 구조체는 값타입.
-
-            // 스택(Stack) 영역
-            // 매개변수, 지역변수
-
-            // 힙(Heap) 영역
-            // 
-
             Car car1 = new("Ferrari");
             Console.WriteLine($"car1 = new(\"{car1.name}\")");
             Console.WriteLine();
@@ -137,84 +143,6 @@
 
             // car2가 car1이 이전에 가리키던 메모리를 car2가 가리키고 있기 때문에 GC의 대상이 되지 않음.
             car1 = new();
-        }
-
-        #endregion
-
-        #region 추상화(Abstraction) 예제
-
-        protected abstract class Animal
-        {
-            // abstract
-            // 클래스를 추상 클래스로 만드는 키워드.
-            // 추상 클래스는 직접 선언할 수 없고 상속만 가능.
-
-            public readonly string name;
-
-            public readonly int legsCount;
-
-            public readonly bool isCanFly;
-
-            protected Animal(string name, int legCount, bool isCanFly)
-            {
-                this.name = name;
-
-                this.legsCount = legCount;
-
-                this.isCanFly = isCanFly;
-            }
-
-            public abstract void Cry();
-        }
-
-        private class Dog : Animal
-        {
-            public Dog() : base("Dog", 4, false) { }
-
-            public override void Cry()
-            {
-                Console.WriteLine("Woof!");
-            }
-        }
-
-        private class Cat : Animal
-        {
-            public Cat() : base("Cat", 4, false) { }
-
-            public override void Cry()
-            {
-                Console.WriteLine("Meow!");
-            }
-        }
-
-        private class Duck : Animal
-        {
-            public Duck() : base("Duck", 2, true) { }
-
-            public override void Cry()
-            {
-                Console.WriteLine("Quack!");
-            }
-        }
-
-        #endregion
-
-        #region UpCastingExample1
-
-        private static void UpCastingExample1()
-        {
-            // 업 캐스팅
-            // 자식 클래스를 부모 클래스에 할당.
-            // 
-            Animal animal1 = new Dog();
-            Animal animal2 = new Cat();
-            Animal animal3 = new Duck();
-
-            animal1.Cry();
-            animal2.Cry();
-            animal3.Cry();
-
-            Console.WriteLine($"{animal1.name}");
         }
 
         #endregion
