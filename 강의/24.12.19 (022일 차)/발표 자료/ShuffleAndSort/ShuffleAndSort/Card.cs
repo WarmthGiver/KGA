@@ -1,4 +1,4 @@
-﻿namespace Assignment4
+﻿namespace ShuffleAndSort
 {
     public sealed class Card
     {
@@ -6,6 +6,7 @@
         // shape와 number를 인덱스로 접근하여 해당 문양과 문자를 받아와 콘솔에 출력할 때 사용.
         public static readonly char[] shapeChars = ['♤', '◇', '♡', '♧'];
 
+        // 10은 로마 숫자 X로 표현.
         public static readonly char[] numberChars = ['0', 'A', '2', '3', '4', '5', '6', '7', '8', '9', 'X', 'J', 'Q', 'K'];
 
         public readonly Shape shape;

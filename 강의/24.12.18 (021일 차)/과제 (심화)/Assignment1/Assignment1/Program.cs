@@ -40,6 +40,7 @@
 */
 
 using System.Collections;
+using static Assignment1.Program;
 
 namespace Assignment1
 {
@@ -47,42 +48,84 @@ namespace Assignment1
     {
         private static void Main(string[] args)
         {
-            Player player = new();
-
+            Player player = new(10000);
+            
             Shop shop =
             [
-                new Item("무기1", 500, "무기1임."),
+                new Item("무기1", 500, "무기1임.", Item.Type.Weapon, new Statistics(10, 0, 0)),
 
-                new Item("방어구1", 500, "방어구1임"),
+                new Item("방어구1", 300, "방어구1임", Item.Type.Armor, new Statistics(0, 5, 0)),
 
-                new Item("악세서리1", 500, "악세서리1임"),
+                new Item("악세서리1", 200, "악세서리1임", Item.Type.Accessory, new Statistics(0, 0, 20)),
             ];
 
             while (true)
             {
+                Console.Clear();
+
                 Console.WriteLine("       [상점 구현 프로그램]\r\n\r\n   해당하는 숫자의 키를 누르시오\r\n\r\n1. 장비창  2. 인벤토리  3. 상점  4. 종료");
 
                 var key = Console.ReadKey(true).Key;
 
                 if (key == ConsoleKey.D1)
                 {
-
+                    player.EquipSystem();
                 }
 
                 else if (key == ConsoleKey.D2)
                 {
-
+                    player.InvetorySystem();
                 }
 
                 else if (key == ConsoleKey.D3)
                 {
-                    shop.MenuSystem();
+                    shop.MenuSystem(player);
                 }
 
                 else if (key == ConsoleKey.D4)
                 {
                     break;
                 }
+
+                else
+                {
+                    Console.WriteLine("1, 2, 3, 4만 누르십시오");
+
+                    Thread.Sleep(500);
+                }
+            }
+        }
+
+        public struct Statistics
+        {
+            public int damage;
+
+            public int defense;
+
+            public int hp;
+
+            public Statistics(int damage, int defense, int hp)
+            {
+                this.damage = damage;
+
+                this.defense = defense;
+
+                this.hp = hp;
+            }
+
+            public static Statistics operator +(Statistics left, Statistics right)
+            {
+                return new(left.damage + right.damage, left.defense + right.defense, left.hp + right.hp);
+            }
+
+            public static Statistics operator -(Statistics left, Statistics right)
+            {
+                return new(left.damage - right.damage, left.defense - right.defense, left.hp - right.hp);
+            }
+
+            public override string ToString()
+            {
+                return $"공: {damage} 방: {defense} 체: {hp}";
             }
         }
 
@@ -98,19 +141,38 @@ namespace Assignment1
             // 설명(String)
             public readonly string explain;
 
-            public Item(string name, int price, string explain)
+            public readonly Type type;
+
+            public readonly Statistics statistics;
+
+            public Item(string name, int price, string explain, Type type, Statistics statistics)
             {
                 this.name = name;
 
                 this.price = price;
 
                 this.explain = explain;
+
+                this.type = type;
+
+                this.statistics = statistics;
             }
 
             // 아이템을 출력할 때, 아이템의 이름, 가격, 설명이 출력되어야 합니다.
             public override string ToString()
             {
                 return $"이름: {name}, 가격: {price}, 설명: {explain}";
+            }
+
+            public enum Type
+            {
+                Weapon,
+
+                Armor,
+
+                Accessory,
+
+                Length
             }
         }
 
@@ -120,8 +182,67 @@ namespace Assignment1
             // 소지금액(int)
             private int moneyAmount;
 
+            private Statistics statistics = new();
+
+            private readonly Dictionary<Item.Type, Item?> equipment = new()
+            {
+                { Item.Type.Weapon, null },
+
+                { Item.Type.Armor, null },
+
+                { Item.Type.Accessory, null },
+            };
+
+            private int equipCount = 0;
+
             // 인벤토리(Item 리스트)
-            private readonly List<Item> inventory = new(128);
+            private readonly List<Item> inventory = new(64);
+
+            public Player(int moneyAmount)
+            {
+                this.moneyAmount = moneyAmount;
+            }
+
+            public bool TryEquip(Item item)
+            {
+                if (equipment[item.type] != null)
+                {
+                    return false;
+                }
+
+                statistics += item.statistics;
+
+                equipment[item.type] = item;
+
+                ++equipCount;
+
+                return true;
+            }
+
+            public bool TryDetach(Item.Type type, out Item? item)
+            {
+                item = null;
+
+                if (equipment.ContainsKey(type) == false)
+                {
+                    return false;
+                }
+
+                if (equipment[type] == null)
+                {
+                    return false;
+                }
+
+                item = equipment[type];
+
+                equipment[type] = null;
+
+                statistics -= item.statistics;
+
+                --equipCount;
+
+                return true;
+            }
 
             // `구매(Item item)`: 플레이어가 아이템을 구매하면, 소지금에서 가격만큼 차감되고 인벤토리에 추가됩니다.소지금이 부족할 경우 구매가 불가능해야 합니다.
             public bool TryBuyItem(Item item)
@@ -139,17 +260,189 @@ namespace Assignment1
             }
 
             // `소지금 확인()`: 현재 플레이어의 소지금을 반환합니다.
-            public int GetMoneyAmount()
+            public void WriteMoneyAmount()
             {
-                return moneyAmount;
+                Console.WriteLine($"보유 금액: {moneyAmount}원");
+            }
+
+            public void WriteStatistics()
+            {
+                Console.WriteLine($"[장비로 인한 추가 스탯] {statistics}");
+            }
+
+            public void WriteEquipment()
+            {
+                for (int i = 0, j = 0; j < (int)Item.Type.Length; ++j)
+                {
+                    if (equipment[(Item.Type)j] == null)
+                    {
+                        continue;
+                    }
+
+                    Console.WriteLine($"[{++i}]. {equipment[(Item.Type)j].name}");
+                }
             }
 
             // `인벤토리 확인()`: 플레이어의 인벤토리에 있는 아이템 목록을 출력합니다.
-            public void WriteInventory()
+            public bool WriteInventory()
             {
-                foreach (var item in inventory)
+                if (inventory.Count == 0)
                 {
-                    Console.WriteLine(item);
+                    Console.WriteLine("인벤토리는 비어있습니다.");
+
+                    return false;
+                }
+
+                Console.WriteLine("현재 인벤토리:");
+
+                for (int i = 0; i < inventory.Count; ++i)
+                {
+                    Console.WriteLine($"[{i + 1}]. {inventory[i].name}");
+                }
+
+                return true;
+            }
+
+            public void EquipSystem()
+            {
+                while (true)
+                {
+                    Console.Clear();
+
+                    if (equipCount == 0)
+                    {
+                        Console.WriteLine("현재 장착중인 장비 없음");
+                    }
+
+                    else
+                    {
+                        Console.WriteLine("현재 장착중인 장비:");
+
+                        WriteEquipment();
+
+                        Console.WriteLine();
+                        
+                        WriteStatistics();
+                    }
+
+                    Console.WriteLine("\n1. 장착  2. 탈착  3. 메인화면");
+
+                    var key = Console.ReadKey(true).Key;
+
+                    if (key == ConsoleKey.D1)
+                    {
+                        if (inventory.Count == 0)
+                        {
+                            Console.WriteLine("인벤토리가 비어있습니다.");
+                        }
+
+                        else
+                        {
+                            WriteInventory();
+
+                            Console.WriteLine("\n장착할 아이템 번호를 입력하세요:");
+
+                            int.TryParse(Console.ReadLine(), out var number);
+
+                            if (number < 1 || inventory.Count < number)
+                            {
+                                Console.WriteLine("잘못된 입력입니다.");
+                            }
+
+                            else if (TryEquip(inventory[number - 1]) == true)
+                            {
+                                Console.WriteLine($"[{inventory[number - 1].name}] 장착 완료!");
+
+                                inventory.RemoveAt(number - 1);
+                            }
+
+                            else
+                            {
+                                Console.WriteLine("해당 부위에 이미 장비가 장착되어 있습니다.");
+                            }
+                        }
+                    }
+
+                    else if (key == ConsoleKey.D2)
+                    {
+                        if (equipCount == 0)
+                        {
+                            Console.WriteLine("장착된 장비가 없습니다.");
+                        }
+
+                        else
+                        {
+                            Console.WriteLine("현재 장착된 장비:");
+
+                            WriteEquipment();
+
+                            Console.WriteLine("\n탈착할 아이템 번호를 입력하세요:");
+
+                            int.TryParse(Console.ReadLine(), out var number);
+
+                            if (TryDetach((Item.Type)number - 1, out var item) == true)
+                            {
+                                Console.WriteLine($"[{item.name}] 탈착 완료!");
+
+                                inventory.Add(item);
+                            }
+
+                            else
+                            {
+                                Console.WriteLine("잘못된 입력입니다.");
+                            }
+                        }
+                    }
+
+                    else if (key == ConsoleKey.D3)
+                    {
+                        return;
+                    }
+
+                    else
+                    {
+                        Console.WriteLine("1, 2, 3만 누르십시오");
+                    }
+
+                    Thread.Sleep(500);
+                }
+            }
+
+            public void InvetorySystem()
+            {
+                while (true)
+                {
+                    Console.Clear();
+
+                    WriteInventory();
+
+                    Console.WriteLine();
+
+                    WriteMoneyAmount();
+
+                    Console.WriteLine("\n버릴 아이템 번호를 입력하세요. (메인 메뉴로 가려면 0 입력)");
+
+                    if (int.TryParse(Console.ReadLine(), out var number) == true)
+                    {
+                        if (number == 0)
+                        {
+                            break;
+                        }
+
+                        if (number > inventory.Count)
+                        {
+                            Console.WriteLine("잘못된 입력입니다.");
+                        }
+
+                        else
+                        {
+                            Console.WriteLine($"[{inventory[number - 1].name}] 아이템을 버렸습니다.");
+
+                            inventory.RemoveAt(number - 1);
+                        }
+
+                        Thread.Sleep(500);
+                    }
                 }
             }
         }
@@ -178,9 +471,11 @@ namespace Assignment1
             // `아이템 목록 출력()`: 상점에서 판매 중인 아이템 목록을 출력합니다.
             private void WriteItemList()
             {
+                Console.WriteLine("상점 아이템 목록:");
+
                 for (int i = 0; i < itemList.Count; ++i)
                 {
-                    Console.WriteLine($"[{i}]. {itemList[i].name} - {itemList[i].price}원");
+                    Console.WriteLine($"[{i + 1}]. {itemList[i].name} - {itemList[i].price}원");
                 }
             }
 
@@ -197,30 +492,36 @@ namespace Assignment1
             {
                 while (true)
                 {
+                    Console.Clear();
+
                     WriteItemList();
 
                     Console.WriteLine("\n구매할 아이템 번호를 입력하세요. (메인 메뉴로 가려면 0 입력)");
 
-                    if (int.TryParse(Console.ReadLine(), out var itemNumber) == false)
+                    if (int.TryParse(Console.ReadLine(), out var itemNumber) == true)
                     {
-                        continue;
+                        if (itemNumber == 0)
+                        {
+                            break;
+                        }
+
+                        if (itemNumber > itemList.Count)
+                        {
+                            Console.WriteLine("잘못된 입력입니다.");
+                        }
+
+                        else if (TrySellItem(player, itemList[itemNumber - 1]) == true)
+                        {
+                            Console.WriteLine($"[{itemList[itemNumber - 1].name}]을(를) 구매했습니다!");
+                        }
+
+                        else
+                        {
+                            Console.WriteLine("소지금이 부족합니다.");
+                        }
+
+                        Thread.Sleep(500);
                     }
-
-                    if (itemNumber == 0)
-                    {
-                        break;
-                    }
-
-                    if (itemNumber > itemList.Count)
-                    {
-                        Console.WriteLine("잘못된 입력입니다.");
-
-                        Thread.Sleep(1000);
-
-                        continue;
-                    }
-
-                    TrySellItem(player, itemList[itemNumber]);
                 }
             }
             // 상점에서 판매 중인 아이템 목록 출력
