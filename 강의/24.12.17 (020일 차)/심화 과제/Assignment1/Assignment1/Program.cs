@@ -8,6 +8,8 @@
 오늘의 LinkedList 수동 구현 과제를 리팩토링 혹은 기능을 추가하여 양방향 연결 리스트 기능을 수행 가능하게끔 만들어 주세요
 */
 
+using System.Collections;
+
 namespace Assignment1
 {
     internal class Program
@@ -16,77 +18,102 @@ namespace Assignment1
        {
             DoubleLinkedList<int> doubleLinkedList = new();
 
-            doubleLinkedList.AddLast(4);
+            doubleLinkedList.AddLast(3);
+
+            foreach (int value in doubleLinkedList)
+            {
+                Console.Write(value);
+            }
+
+            Console.WriteLine();
 
             doubleLinkedList.AddFirst(1);
 
-            for (int i = 0; i < doubleLinkedList.Count; ++i)
+            foreach (int value in doubleLinkedList)
             {
-                Console.Write(doubleLinkedList[i]);
+                Console.Write(value);
+            }
+
+            Console.WriteLine();
+
+            doubleLinkedList.AddLast(5);
+
+            foreach (int value  in doubleLinkedList)
+            {
+                Console.Write(value);
             }
 
             Console.WriteLine();
 
             doubleLinkedList.TryAddBefore(1, 2);
 
-            for (int i = 0; i < doubleLinkedList.Count; ++i)
+            foreach (int value in doubleLinkedList)
             {
-                Console.Write(doubleLinkedList[i]);
+                Console.Write(value);
             }
 
             Console.WriteLine();
 
-            doubleLinkedList.TryAddAfter(1, 3);
+            doubleLinkedList.TryAddAfter(2, 4);
 
-            for (int i = 0; i < doubleLinkedList.Count; ++i)
+            foreach(int value  in doubleLinkedList)
             {
-                Console.Write(doubleLinkedList[i]);
+                Console.Write(value);
+            }
+
+            Console.WriteLine();
+
+            doubleLinkedList.TryRemove(3);
+
+            foreach (int value in doubleLinkedList)
+            {
+                Console.Write(value);
+            }
+
+            Console.WriteLine();
+
+            doubleLinkedList.TryRemove(1);
+
+            foreach (int value in doubleLinkedList)
+            {
+                Console.Write(value);
+            }
+
+            Console.WriteLine();
+
+            doubleLinkedList.TryRemoveLast();
+
+            foreach (int value in doubleLinkedList)
+            {
+                Console.Write(value);
             }
 
             Console.WriteLine();
 
             doubleLinkedList.TryRemoveFirst();
 
-            for (int i = 0; i < doubleLinkedList.Count; ++i)
+            foreach (int value in doubleLinkedList)
             {
-                Console.Write(doubleLinkedList[i]);
-            }
-
-            Console.WriteLine();
-
-            doubleLinkedList.TryRemoveLast();
-
-            for (int i = 0; i < doubleLinkedList.Count; ++i)
-            {
-                Console.Write(doubleLinkedList[i]);
-            }
-
-            Console.WriteLine();
-
-            doubleLinkedList.TryRemoveLast();
-
-            for (int i = 0; i < doubleLinkedList.Count; ++i)
-            {
-                Console.Write(doubleLinkedList[i]);
+                Console.Write(value);
             }
 
             Console.WriteLine();
 
             doubleLinkedList.Clear();
 
-            for (int i = 0; i < doubleLinkedList.Count; ++i)
+            foreach (int value in doubleLinkedList)
             {
-                Console.Write(doubleLinkedList[i]);
+                Console.Write(value);
             }
         }
 
-        public sealed class DoubleLinkedList<T>
+        public sealed class DoubleLinkedList<T> : IEnumerable<T>
 
             where T : struct
         {
-            private Node head;
+            private readonly Node head;
 
-            private Node tail;
+            private readonly Node tail;
 
             private int count = 0;
 
@@ -96,7 +123,7 @@ namespace Assignment1
             {
                 get
                 {
-                    if (TryFind(index, out var value) == true)
+                    if (TryFind(index, out T value) == true)
                     {
                         return value;
                     }
@@ -116,146 +143,98 @@ namespace Assignment1
                 tail.front = head;
             }
 
+            public IEnumerator<T> GetEnumerator()
+            {
+                for (Node node = head.back; node != tail; ++node)
+                {
+                    yield return node.value;
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
             public void AddFirst(T value)
             {
-                Node node = new()
-                {
-                    value = value,
-
-                    front = head,
-
-                    back = head.back
-                };
-
-                head.back.front = node;
-
-                head.back = node;
+                AddAfter(head, value);
 
                 ++count;
             }
 
-            public void AddLast(T? value)
+            public bool TryAddAfter(int index, T value)
             {
-                Node node = new()
+                if (TryFind(index, out Node? node) == false)
+                {
+                    return false;
+                }
+
+                AddAfter(node, value);
+
+                return true;
+            }
+
+            public void AddAfter(Node node, T value)
+            {
+                Node newNode = new()
                 {
                     value = value,
 
-                    front = tail.front,
+                    front = node,
 
-                    back = tail
+                    back = node.back
                 };
 
-                tail.front.back = node;
+                node.back.front = newNode;
 
-                tail.front = node;
+                node.back = newNode;
+
+                ++count;
+            }
+
+            public void AddLast(T value)
+            {
+                AddBefore(tail, value);
 
                 ++count;
             }
 
             public bool TryAddBefore(int index, T value)
             {
-                if (TryFindNode(index, out var oldNode) == false)
+                if (TryFind(index, out Node? node) == false)
                 {
                     return false;
                 }
 
-                Node? newNode = new()
-                {
-                    value = value,
-
-                    front = oldNode.front,
-
-                    back = oldNode
-                };
-
-                oldNode.front.back = newNode;
-
-                oldNode.front = newNode;
-
-                ++count;
+                AddBefore(node, value);
 
                 return true;
             }
 
-            public bool TryAddAfter(int index, T value)
+            public void AddBefore(Node node, T value)
             {
-                if (TryFindNode(index, out var oldNode) == false)
-                {
-                    return false;
-                }
-
-                Node? newNode = new()
+                Node newNode = new()
                 {
                     value = value,
 
-                    front = oldNode,
+                    front = node.front,
 
-                    back = oldNode.back
+                    back = node
                 };
 
-                oldNode.back.front = newNode;
+                node.front.back = newNode;
 
-                oldNode.back = newNode;
+                node.front = newNode;
 
                 ++count;
-
-                return true;
-            }
-
-            public bool TryFind(int index, out T? result)
-            {
-                if (TryFindNode(index, out var node) == true)
-                {
-                    result = node.value;
-
-                    return true;
-                }
-
-                result = null;
-
-                return false;
-            }
-
-            private bool TryFindNode(int index, out Node? result)
-            {
-                result = head.back;
-
-                for (int i = 0; result != tail; ++i)
-                {
-                    if (i == index)
-                    {
-                        return true;
-                    }
-
-                    result = result.back;
-                }
-
-                result = null;
-
-                return false;
-            }
-
-            public bool TryRemove()
-            {
-                if (count > 0)
-                {
-                    // 
-
-                    --count;
-
-                    return true;
-                }
-
-                return false;
             }
 
             public bool TryRemoveFirst()
             {
                 if (count > 0)
                 {
-                    head.back.back.front = head;
-
-                    head.back = head.back.back;
+                    head.back.Unlink();
 
                     --count;
 
@@ -269,14 +248,71 @@ namespace Assignment1
             {
                 if (count > 0)
                 {
-                    tail.front.front.back = head;
-
-                    tail.front = tail.front.front;
+                    tail.front.Unlink();
 
                     --count;
 
                     return true;
                 }
+
+                return false;
+            }
+
+            public bool TryRemove(Node target)
+            {
+                if (count > 0)
+                {
+                    target.Unlink();
+
+                    --count;
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            public bool TryRemove(int index)
+            {
+                if (TryFind(index, out Node? target) == true)
+                {
+                    target.Unlink();
+
+                    --count;
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            public bool TryFind(int index, out T result)
+            {
+                if (TryFind(index, out Node? node) == true)
+                {
+                    result = node.value;
+
+                    return true;
+                }
+
+                result = default;
+
+                return false;
+            }
+
+            public bool TryFind(int index, out Node? result)
+            {
+                result = head;
+
+                while (++result != tail)
+                {
+                    if (index-- == 0)
+                    {
+                        return true;
+                    }
+                }
+
+                result = null;
 
                 return false;
             }
@@ -292,11 +328,35 @@ namespace Assignment1
 
             public sealed class Node
             {
-                public T? value;
+                public T value;
 
-                public Node? front = null;
+                internal Node? front = null;
 
-                public Node? back = null;
+                public Node? Front => front;
+
+                internal Node? back = null;
+
+                public Node? Back => back;
+
+                public static Node? operator ++(Node node)
+                {
+                    return node.back;
+                }
+
+                public static Node? operator --(Node node)
+                {
+                    return node.front;
+                }
+
+                internal void Unlink()
+                {
+                    if (front != null && back != null)
+                    {
+                        front.back = back;
+
+                        back.front = front;
+                    }
+                }
             }
         }
     }
